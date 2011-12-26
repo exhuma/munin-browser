@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        CANVAS {
+            border: 1px solid black;
+        }
+    </style>
+    <script type="text/javascript">
+
+        function loadImages(sources, callback){
+            var images = {};
+            var loadedImages = 0;
+            var numImages = 0;
+            // get num of sources
+            for (var src in sources) {
+                numImages++;
+            }
+            for (var src in sources) {
+                images[src] = new Image();
+                images[src].onload = function(){
+                    if (++loadedImages >= numImages) {
+                            callback(images);
+                    }
+                };
+                images[src].src = sources[src];
+            }
+        }
+
+        function copyImageData(context, original){
+            var rv = context.createImageData(original.width, original.height);
+            //rv.data = Array.prototype.slice.call(original.data, 0);
+            for (var i=0; i<original.data.length; i++){
+                rv.data[i] = original.data[i];
+            }
+            return rv;
+        }
+
+        function blend(context, layer_a, layer_b){
+            // create a new ImageData object
+            // TODO: look up the reference of ImageData. And start a new object from scratch instead of copying.
+            var blended = copyImageData(context, layer_a);
+
+            // grab a reference to the image data (the pixels) and blend
+            var pix = blended.data;
+            for (var i = 0, n = pix.length; i<n; i += 4){
+                pix[i  ] = layer_a.data[i  ] * layer_b.data[i  ] / 255; // red
+                pix[i+1] = layer_a.data[i+1] * layer_b.data[i+1] / 255; // green
+                pix[i+2] = layer_a.data[i+2] * layer_b.data[i+2] / 255; // blue
+                // skipping idx[i+3] (alpha)
+            }
+            return blended;
+        }
+
+        window.onload = function(){
+
+            var canvas = document.getElementById("myCanvas");
+            var context = canvas.getContext("2d");
+
+            var sources = {
+                graph1: "http://192.168.1.1/munin/localdomain/localhost.localdomain/diskstats_latency-day.png",
+                graph2: "http://192.168.1.1/munin/localdomain/localhost.localdomain/diskstats_iops-day.png"
+
+            };
+
+            var layers = new Array();
+
+            loadImages(sources, function(images){
+
+                var graph_width = 500;
+                var graph_height = 300;
+                var offset_x = 64;
+                var offset_y = 26;
+
+                canvas.width = images.graph1.width + 10;
+                canvas.height = images.graph1.height + 10;
+
+                // load the graph image data into our layers
+                context.drawImage(images.graph1, 0, 0);
+                layers.push(context.getImageData(
+                    offset_x, offset_y,
+                    offset_x+graph_width, offset_y+graph_height));
+
+                context.drawImage(images.graph2, 0, 0);
+                layers.push(context.getImageData(
+                    offset_x, offset_y,
+                    offset_x+graph_width, offset_y+graph_height));
+
+
+                // modify the image data
+                var newData = blend(context, layers[0], layers[1]);
+
+                // draw the new image data
+                context.putImageData(newData,
+                        offset_x, offset_y);
+
+            });
+
+        };
+    </script>
+</head>
+<body>
+    <h1>Hello Canvas</h1>
+    <canvas id="myCanvas" width="578" height="200"></canvas>
+</body>
+</html>
