@@ -1,0 +1,5 @@
+MANIFEST
+env
+dist
+*.egg-info
+dev.py

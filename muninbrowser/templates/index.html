@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MuninBrowser</title>
+    <style type="text/css">
+        BODY{
+            margin: 0;
+            padding: 0;
+        }
+
+        #HostSelector{
+            position: fixed;
+            left: 0;
+            top: 0;
+            border: 1px solid black;
+            width: 250px;
+        }
+
+        #HostSelector H1{
+            margin: 0;
+            margin-top: 1em;
+            padding: 0.1em 0.5em;
+            background: #ccc;
+            border-bottom: 1px solid black;
+            font-size: 100%;
+        }
+
+        #Container{
+            margin-left: 250px;
+            border: 1px solid blue;
+            white-space: nowrap;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="HostSelector">
+        {% for group in tree %}
+            <h1>{{group}}</h1>
+            {% for host in tree[group] %}
+            <div class="hostControls">
+                <input class="hostSelector" type="checkbox" title="Display day graph" value="{{host}};day" />
+                <input class="hostSelector" type="checkbox" title="Display week graph" value="{{host}};week" />
+                <input class="hostSelector" type="checkbox" title="Display month graph" value="{{host}};month" />
+                <input class="hostSelector" type="checkbox" title="Display year graph" value="{{host}};year" />&nbsp;{{host}}<br />
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="Container">
+    </div>
+</body>
+</html>
