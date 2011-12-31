@@ -12,10 +12,12 @@ setup(
     include_package_data=True,
     install_requires = [
       'Flask',
+      'unittest2',
       ],
     zip_safe=False,
     entry_points = {
         'console_scripts': ['munin-browser = muninbrowser.serve:main']
         },
+    test_suite = 'tests'
 )
 

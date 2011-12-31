@@ -4,31 +4,46 @@ import logging
 """
 This module is used to read a munin config file.
 
-The configuration is accessible as a standard dict via either the ``CONF``
-member or the value returned by the ``read`` method::
+The configuration is accessible as a subclass of a standard dict.
+The specialised class offers a couple of convenience methods over the standard
+dict:
+
+* It has a ``globals`` property representing the global settings for that group
+
+* It has a ``members`` property representing the direct child without the
+  globals. Members of ``conf`` are the host groups, wile members of a host
+  group are the hosts
+
+The config object can be constructed with the ``read`` method::
 
     from muninbrowser import configparser
     conf = configparser.read(open('/etc/munin/munin.conf'))
 
-    print 'global settings: %r' % conf['__global']
-    for group in conf:
-        if not group.startswith('__'):
-            print 'Group: %s' % group
-            print 'group globals: %r' % conf[group]['__global']
-            for host in conf['group']:
-                if not host.startswith('__'):
-                print 'Host: %s' % host
-
-As you can see, the global munin settings are exposed under the ``__global``
-key. Each key not beginnig with ``__`` is a group specification. Each group
-contains the hosts. Again, also the groups can have global settings under the
-``__global`` key.
-
-Note that the ``__global`` key is *always* present!
+    print 'global settings: %r' % conf.globals
+    for group in conf.members:
+        print 'Group: %s' % group
+        print 'group globals: %r' % conf[group].globals
+        for host in conf[group].members:
+            print 'Host: %s' % host
 """
 
+class MuninConfig(dict):
+    """
+    A subclass of dict providing some helper functions
+    """
+
+    @property
+    def members(self):
+        """Return a list of non-special keys"""
+        return [_ for _ in self.keys() if not _.startswith('__')]
+
+    @property
+    def globals(self):
+        """Return the global settings"""
+        return self['__global']
+
 LOG = logging.getLogger(__name__)
-CONF = {'__global': {}}
+CONF = MuninConfig(__global = MuninConfig())
 
 P_COMMENT = re.compile(r'#.*$')
 P_HOST = re.compile(r'^\[(.*)\]$')
@@ -65,7 +80,7 @@ def read(file):
                 group = line.split('.', 1)[1]
             else:
                 group, host = line.split(';')
-            CONF.setdefault(group, {'__global': {}})
+            CONF.setdefault(group, MuninConfig(__global = {}))
             if not host:
                 host = '__global'
             CONF[group].setdefault(host, {})
