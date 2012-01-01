@@ -103,6 +103,8 @@ def read_datafile(conf, file):
             last_graph['meters'][meter_name][meter_var] = value
             current_state = 'graph_meters'
 
+        conf[group][host]['__graphs'][last_graph['__name']] = last_graph
+
 def read(file):
     """
     Read the config from a file-like object, and return a ``dict`` as
