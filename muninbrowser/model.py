@@ -1,3 +1,6 @@
+class UnboundObjectError(ValueError):
+    pass
+
 class Munin(object):
 
     def __init__(self, configfile):
@@ -27,6 +30,9 @@ class Munin(object):
 
 class MuninObject(object):
 
+    def __init__(self):
+        self._conf = None
+
     def bind(self, config):
         self._conf = config
 
@@ -36,6 +42,7 @@ class Group(MuninObject):
     """
 
     def __init__(self, name, conf=None):
+        super(Group, self).__init__()
         self.name = name
         if conf:
             self.bind(conf)
@@ -85,9 +92,11 @@ class Host(MuninObject):
     """
 
     def __init__(self, group, name, conf=None):
+        super(Host, self).__init__()
         self.group = group
         self.name = name
         if conf:
+            self.graphs = conf[group][name]['__graphs']
             self.bind(conf)
 
     def __repr__(self):
@@ -120,3 +129,46 @@ class Host(MuninObject):
                     tmp = Host(group, host, conf=conf)
                     out.append(tmp)
         return out
+
+class Graph(MuninObject):
+    """
+    A class representing a graph
+    """
+
+    def __init__(self, host, name, conf=None):
+        super(Graph, self).__init__()
+        self.host = host
+        self.name = name
+        if conf:
+            self.bind(conf)
+
+    def __repr__(self):
+        return "<%s %s:%s>" % (
+                self.__class__.__name__,
+                self.host,
+                self.name)
+
+    def __eq__(self, other):
+        return isinstance(other, Graph) and (
+                other.host == self.host and
+                other.name == self.name)
+
+    def __hash__(self):
+        return (self.host.__hash__() ^
+                self.name.__hash__())
+
+    @property
+    def attributes(self):
+        if not self._conf:
+            raise UnboundObjectError('The instance %r is not bound to a config instance!' % self)
+        return self._conf[self.host.group][self.host.name]['__graphs'][self.name].keys()
+
+    @classmethod
+    def all(self, conf):
+        """
+        Returns a list of all graphs.
+        """
+        all_graphs = set()
+        for host in Host.all(conf):
+            all_graphs.update([Graph(host,  _, conf=conf) for _ in host.graphs.keys()])
+        return all_graphs

@@ -42,8 +42,8 @@ class TestConfigParser(unittest.TestCase):
         self.assertEquals(self._conf['__datafile_version'], '1.4.4')
 
     def test_datafile_contents(self):
-        self.assertIn('open_inodes', self._conf['localdomain']['localhost.localdomain'])
-        inode_graph = self._conf['localdomain']['localhost.localdomain']['open_inodes']
+        self.assertIn('open_inodes', self._conf['localdomain']['localhost.localdomain']['__graphs'])
+        inode_graph = self._conf['localdomain']['localhost.localdomain']['__graphs']['open_inodes']
 
         self.assertIn('graph_title', inode_graph)
         self.assertIn('graph_args', inode_graph)

@@ -1,5 +1,5 @@
 import unittest2 as unittest
-from muninbrowser.model import Group, Host
+from muninbrowser.model import Group, Host, Graph
 
 class TestGroup(unittest.TestCase):
 
@@ -47,3 +47,19 @@ class TestHosts(unittest.TestCase):
             Host('localdomain', 'localhost.localdomain')
             ])
         self.assertEquals(set(Host.all(self._conf, 'localdomain')), expected)
+
+class TestGraphs(unittest.TestCase):
+
+    def setUp(self):
+        from muninbrowser.configparser import read
+        from os.path import join, dirname
+        conf_name = join(dirname(__file__), 'test_config.conf')
+        self._conf = read(open(conf_name))
+
+    def test_graphs(self):
+        expected = set([
+            Host('hostgroup', 'hostname'),
+            Host('localdomain', 'localhost.localdomain')
+            ])
+        self.assertEquals(len(Graph.all(self._conf)), 102)
+

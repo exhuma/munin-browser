@@ -80,7 +80,7 @@ def read_datafile(conf, file):
             if current_state != 'graph_info':
                 current_state = 'graph_info'
                 if '__name' in last_graph:
-                    conf[group][host][last_graph['__name']] = last_graph
+                    conf[group][host]['__graphs'][last_graph['__name']] = last_graph
                 last_graph = {
                         '__name': graph_name,
                         'meters': {}}
@@ -137,7 +137,8 @@ def read(file):
             CONF.setdefault(group, MuninConfig(__global = {}))
             if not host:
                 host = '__global'
-            CONF[group].setdefault(host, {})
+            host_dict = CONF[group].setdefault(host, {})
+            host_dict.setdefault('__graphs', {})
             current_section = (group, host)
             continue
 
