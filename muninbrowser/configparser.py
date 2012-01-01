@@ -1,5 +1,6 @@
 import re
 import logging
+from os.path import join
 
 """
 This module is used to read a munin config file.
@@ -51,6 +52,56 @@ CONF = MuninConfig(__global = MuninConfig(
 P_COMMENT = re.compile(r'#.*$')
 P_HOST = re.compile(r'^\[(.*)\]$')
 P_SEPARATOR = re.compile(r'\s+')
+
+def read_datafile(conf, file):
+    """
+    Read the munin data-file and merge the contents with the config object
+    """
+
+    last_graph = {}
+    line = file.readline().strip()
+    _, version = line.split()
+    conf['__datafile_version'] = version
+    current_state = 'initial'
+
+    for line in file:
+        line = line.strip()
+        group, host_graph = line.split(';', 1)
+        host, graph_meta = host_graph.split(':', 1)
+        graph_path, value = graph_meta.split(' ', 1)
+        graph_name, tail_var = graph_path.rsplit('.', 1)
+
+        #
+        # As long as the values start with "graph_" we have general graph
+        # metadata
+        #
+        if tail_var.startswith('graph_'):
+
+            if current_state != 'graph_info':
+                current_state = 'graph_info'
+                if '__name' in last_graph:
+                    conf[group][host][last_graph['__name']] = last_graph
+                last_graph = {
+                        '__name': graph_name,
+                        'meters': {}}
+                last_graph[tail_var] = value
+                continue
+
+            last_graph[tail_var] = value
+
+            if tail_var == 'graph_order':
+                # initialise the meter collections
+                for meter in value.split():
+                    last_graph['meters'].setdefault(meter, {})
+
+        else:
+            #
+            # if the values don't start with "graph_" we assume we have meters
+            #
+            graph_name, meter_name, meter_var = graph_path.rsplit('.', 2)
+            last_graph['meters'].setdefault(meter_name, {})
+            last_graph['meters'][meter_name][meter_var] = value
+            current_state = 'graph_meters'
 
 def read(file):
     """
@@ -104,4 +155,7 @@ def read(file):
             group, host = current_section
             CONF[group][host][key.strip()] = value.strip()
 
+    datafile = join(CONF.globals['dbdir'], 'datafile')
+    with open(datafile) as fp:
+        read_datafile(CONF, fp)
     return CONF
