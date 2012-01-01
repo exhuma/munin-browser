@@ -41,7 +41,87 @@ class TestConfigParser(unittest.TestCase):
         "Test the datafile version (currently tested against 1.4.4)"
         self.assertEquals(self._conf['__datafile_version'], '1.4.4')
 
-    def test_datafile_contents(self):
+    def test_first_graph_loaded(self):
+        "Test if the first graph in the file is properly loaded"
+
+        self.assertIn('postgres_connections_ALL',
+                self._conf['localdomain']['localhost.localdomain']['__graphs'])
+        pg_graph = self._conf['localdomain']['localhost.localdomain']['__graphs']['postgres_connections_ALL']
+
+        self.assertEquals(pg_graph['graph_title'], 'PostgreSQL connections')
+        self.assertEquals(pg_graph['graph_vlabel'], 'Connections')
+        self.assertEquals(pg_graph['graph_category'], 'PostgreSQL')
+        self.assertEquals(pg_graph['graph_info'], 'Number of connections')
+        self.assertEquals(pg_graph['graph_args'], '--base 1000')
+        self.assertEquals(pg_graph['graph_order'], 'active waiting idle idletransaction unknown')
+
+        self.assertEquals(pg_graph['meters']['waiting']['draw'], 'STACK')
+        self.assertEquals(pg_graph['meters']['waiting']['min'], 'U')
+        self.assertEquals(pg_graph['meters']['waiting']['max'], 'U')
+        self.assertEquals(pg_graph['meters']['waiting']['label'], 'Waiting for lock')
+        self.assertEquals(pg_graph['meters']['waiting']['type'], 'GAUGE')
+        self.assertEquals(pg_graph['meters']['unknown']['draw'], 'STACK')
+        self.assertEquals(pg_graph['meters']['unknown']['min'], 'U')
+        self.assertEquals(pg_graph['meters']['unknown']['max'], 'U')
+        self.assertEquals(pg_graph['meters']['unknown']['label'], 'Unknown')
+        self.assertEquals(pg_graph['meters']['unknown']['type'], 'GAUGE')
+        self.assertEquals(pg_graph['meters']['active']['draw'], 'AREA')
+        self.assertEquals(pg_graph['meters']['active']['min'], 'U')
+        self.assertEquals(pg_graph['meters']['active']['max'], 'U')
+        self.assertEquals(pg_graph['meters']['active']['label'], 'Active')
+        self.assertEquals(pg_graph['meters']['active']['type'], 'GAUGE')
+        self.assertEquals(pg_graph['meters']['idletransaction']['draw'], 'STACK')
+        self.assertEquals(pg_graph['meters']['idletransaction']['min'], 'U')
+        self.assertEquals(pg_graph['meters']['idletransaction']['max'], 'U')
+        self.assertEquals(pg_graph['meters']['idletransaction']['label'], 'Idle in transaction')
+        self.assertEquals(pg_graph['meters']['idletransaction']['type'], 'GAUGE')
+        self.assertEquals(pg_graph['meters']['idle']['draw'], 'STACK')
+        self.assertEquals(pg_graph['meters']['idle']['min'], 'U')
+        self.assertEquals(pg_graph['meters']['idle']['max'], 'U')
+        self.assertEquals(pg_graph['meters']['idle']['label'], 'Idle')
+        self.assertEquals(pg_graph['meters']['idle']['type'], 'GAUGE')
+
+    def test_last_graph_loaded(self):
+        "Test if the last graph in the file is properly loaded"
+
+        self.assertIn('diskstats_latency.sda',
+                self._conf['localdomain']['localhost.localdomain']['__graphs'])
+        dl_graph = self._conf['localdomain']['localhost.localdomain']['__graphs']['diskstats_latency.sda']
+
+        self.assertEquals(dl_graph['graph_title'], 'Disk latency for /dev/sda')
+        self.assertEquals(dl_graph['graph_args'], '--base 1000')
+        self.assertEquals(dl_graph['graph_vlabel'], 'seconds')
+        self.assertEquals(dl_graph['graph_category'], 'disk')
+        self.assertEquals(dl_graph['graph_order'], 'svctm avgwait avgrdwait avgwrwait')
+
+        self.assertEquals(dl_graph['meters']['avgrdwait']['info'], 'Average wait time for a read I/O from request start to finish (includes queue times et al)')
+        self.assertEquals(dl_graph['meters']['avgrdwait']['draw'], 'LINE1')
+        self.assertEquals(dl_graph['meters']['avgrdwait']['min'], '0')
+        self.assertEquals(dl_graph['meters']['avgrdwait']['max'], 'U')
+        self.assertEquals(dl_graph['meters']['avgrdwait']['label'], 'Average Read IO Wait time')
+        self.assertEquals(dl_graph['meters']['avgrdwait']['type'], 'GAUGE')
+        self.assertEquals(dl_graph['meters']['svctm']['info'], 'Average time an I/O takes on the block device')
+        self.assertEquals(dl_graph['meters']['svctm']['draw'], 'LINE1')
+        self.assertEquals(dl_graph['meters']['svctm']['min'], '0')
+        self.assertEquals(dl_graph['meters']['svctm']['max'], 'U')
+        self.assertEquals(dl_graph['meters']['svctm']['label'], 'Average device IO time')
+        self.assertEquals(dl_graph['meters']['svctm']['type'], 'GAUGE')
+        self.assertEquals(dl_graph['meters']['avgwait']['info'], 'Average wait time for an I/O from request start to finish (includes queue times et al)')
+        self.assertEquals(dl_graph['meters']['avgwait']['draw'], 'LINE1')
+        self.assertEquals(dl_graph['meters']['avgwait']['min'], '0')
+        self.assertEquals(dl_graph['meters']['avgwait']['max'], 'U')
+        self.assertEquals(dl_graph['meters']['avgwait']['label'], 'Average IO Wait time')
+        self.assertEquals(dl_graph['meters']['avgwait']['type'], 'GAUGE')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['info'], 'Average wait time for a write I/O from request start to finish (includes queue times et al)')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['draw'], 'LINE1')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['min'], '0')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['max'], 'U')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['label'], 'Average Write IO Wait time')
+        self.assertEquals(dl_graph['meters']['avgwrwait']['type'], 'GAUGE')
+
+    def test_middle_graph(self):
+        "Test if a graph in the 'middle' of the file is properly parsed"
+
         self.assertIn('open_inodes', self._conf['localdomain']['localhost.localdomain']['__graphs'])
         inode_graph = self._conf['localdomain']['localhost.localdomain']['__graphs']['open_inodes']
 
@@ -71,17 +151,4 @@ class TestConfigParser(unittest.TestCase):
         self.assertEquals(inode_used['max'], 'U')
         self.assertEquals(inode_used['label'], 'open inodes')
         self.assertEquals(inode_used['type'], 'GAUGE')
-
-        #used.min U
-        #used.max U
-        #used.label open inodes
-        #used.type GAUGE
-        #max.info The size of the system inode table. This is dynamically
-        #max.min U
-        #max.max U
-        #max.label inode table size
-        #max.type GAUGE
-
-
-
 
