@@ -43,7 +43,10 @@ class MuninConfig(dict):
         return self['__global']
 
 LOG = logging.getLogger(__name__)
-CONF = MuninConfig(__global = MuninConfig())
+
+# Defaults
+CONF = MuninConfig(__global = MuninConfig(
+    dbdir='/var/lib/munin'))
 
 P_COMMENT = re.compile(r'#.*$')
 P_HOST = re.compile(r'^\[(.*)\]$')

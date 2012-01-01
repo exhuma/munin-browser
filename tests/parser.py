@@ -15,7 +15,8 @@ class TestConfigParser(unittest.TestCase):
          expected = {
                  'graph_width': '500',
                  'includedir': '/etc/munin/munin-conf.d',
-                 'graph_height': '300'}
+                 'graph_height': '300',
+                 'dbdir': '/var/lib/munin'}
          self.assertEquals(self._conf.globals, expected)
 
     def test_groups(self):
