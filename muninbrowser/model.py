@@ -164,11 +164,22 @@ class Graph(MuninObject):
         return self._conf[self.host.group][self.host.name]['__graphs'][self.name].keys()
 
     @classmethod
-    def all(self, conf):
+    def all_names(self, conf):
         """
-        Returns a list of all graphs.
+        Returns a list of all known graph names
         """
         all_graphs = set()
         for host in Host.all(conf):
-            all_graphs.update([Graph(host,  _, conf=conf) for _ in host.graphs.keys()])
+            all_graphs.update([name for name in host.graphs.keys()])
         return all_graphs
+
+    @classmethod
+    def all_categories(self, conf):
+        """
+        Returns a list of all known graph categories
+        """
+        categories = set()
+        for host in Host.all(conf):
+            for key in host.graphs:
+                categories.add(host.graphs[key]['graph_category'])
+        return categories
